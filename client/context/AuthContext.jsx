@@ -28,6 +28,13 @@ export const AuthProvider = ({ children })=> {
                 connectSocket(data.user);
             }
         } catch (error) {
+            if (error?.response?.status === 401) {
+                localStorage.removeItem("token");
+                setToken(null);
+                axios.defaults.headers.common["token"] = null;
+                setAuthUser(null);
+                return;
+            }
             toast.error(error.message)
         }
     }
@@ -103,9 +110,14 @@ export const AuthProvider = ({ children })=> {
     useEffect(()=>{
         if(token){
             axios.defaults.headers.common["token"] = token;
+            checkAuth();
+        }else {
+            // no token -> ensure clean state
+            axios.defaults.headers.common["token"] = null;
+            setAuthUser(null);
         }
-        checkAuth();
-    },[])
+        
+    },[token])
 
 
 
