@@ -50,12 +50,10 @@ app.use(express.json({limit: "4mb"}))
 // configure express CORS using allowedOrigins
 if (allowedOrigins.length) {
   app.use(cors({ origin: allowedOrigins, credentials: true }));
-  app.options("/*", cors({ origin: allowedOrigins, credentials: true }));
   console.log("CORS allowed origins:", allowedOrigins);
 } else {
   // WARNING: allows all origins — OK for quick testing, restrict in production
   app.use(cors());
-  app.options("/*", cors());
   console.log("CORS: allowing all origins");
 }
 
