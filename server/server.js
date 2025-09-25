@@ -11,9 +11,19 @@ import { Server } from "socket.io";
 const app = express();
 const server = http.createServer(app)
 
+const rawAllowed = process.env.ALLOWED_ORIGINS || "";
+const allowedOrigins = rawAllowed
+  .split(",")
+  .map((s) => s.trim().replace(/^['"]|['"]$/g, ""))
+  .filter(Boolean);
+
 //socket io setup
 export const io = new Server(server, {
-    cors: {origin: "*"}
+    cors: {
+    origin: allowedOrigins.length ? allowedOrigins : "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  },
 })
 
 export const userSocketMap = {};
@@ -37,7 +47,17 @@ io.on("connection", (socket)=> {
 // middleware setup
 
 app.use(express.json({limit: "4mb"}))
-app.use(cors())
+// configure express CORS using allowedOrigins
+if (allowedOrigins.length) {
+  app.use(cors({ origin: allowedOrigins, credentials: true }));
+  app.options("*", cors({ origin: allowedOrigins, credentials: true }));
+  console.log("CORS allowed origins:", allowedOrigins);
+} else {
+  // WARNING: allows all origins — OK for quick testing, restrict in production
+  app.use(cors());
+  app.options("*", cors());
+  console.log("CORS: allowing all origins");
+}
 
 app.use("/api/status", (req,res)=> res.send("Server is live..."));
 app.get("/", (req, res) => res.redirect("/api/status"));

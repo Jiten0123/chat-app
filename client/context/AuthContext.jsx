@@ -6,8 +6,9 @@ import { useEffect } from "react";
 import {io} from "socket.io-client"
 
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
-axios.defaults.baseURL = backendUrl;
+const rawBackend = import.meta.env.VITE_BACKEND_URL || "";
+const backendUrl = rawBackend.trim().replace(/^['"]|['"]$/g, "");
+axios.defaults.baseURL = backendUrl || "/";
 
 export const AuthContext = createContext();
 
@@ -85,12 +86,12 @@ export const AuthProvider = ({ children })=> {
 
     const connectSocket = (userData)=> {
         if(!userData || socket?.connected) return;
-        const newSocket = io(backendUrl, {
+        const newSocket = io(backendUrl || undefined , {
             query: {
                 userId: userData._id,
             }
         });
-        newSocket.connect();
+        // newSocket.connect();
         setSocket(newSocket);
         
         // server emits the list of online user ids as payload
